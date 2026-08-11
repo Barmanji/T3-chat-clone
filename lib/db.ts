@@ -1,3 +1,4 @@
+// basic boiler plate of prisma
 import { Pool } from "pg";
 import { PrismaClient } from "./generated/prisma/client";
 import {PrismaPg} from "@prisma/adapter-pg";
