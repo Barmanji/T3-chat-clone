@@ -24,7 +24,7 @@ const Modal= ({
   submitVariant = "default",
   size,
   className = ''
-}) => {
+}: ModalProp) => {
   const handleSubmit = () => {
     if (onSubmit) {
       onSubmit()
@@ -42,7 +42,7 @@ const Modal= ({
             </DialogDescription>
           )}
         </DialogHeader>
-        
+
         <div className="py-4">
           {children}
         </div>
