@@ -3,10 +3,10 @@ import React, { useState } from 'react'
 import ChatWelcomeTabs from './chat-welcome-tabs';
 import ChatMessageForm from './chat-message-form';
 
-const ChatMessageView = ({user}) => {
+const ChatMessageView = ({user}: any) => {
     const [selectedMessage , setSelectedMessage] = useState("");
 
-      const handleMessageSelect = (message) => {
+      const handleMessageSelect = (message: any) => {
     setSelectedMessage(message);
   };
 

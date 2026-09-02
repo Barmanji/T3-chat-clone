@@ -19,8 +19,14 @@ import DeleteChatModel from "@/components/delete-chat-model";
 import { useGetChats } from "../hooks/use-chats";
 import { Spinner } from "@/components/ui/spinner";
 
+// grouping chat as yesterday, today.
 function groupChatsByDate(chats: any) {
-  const groups = { today: [], yesterday: [], lastWeek: [], older: [] };
+  const groups = {
+    today: [] as any[],
+    yesterday: [] as any[],
+    lastWeek: [] as any[],
+    older: [] as any[],
+  };
   const now = new Date();
 
   if (!chats || !Array.isArray(chats)) return groups;
@@ -29,8 +35,15 @@ function groupChatsByDate(chats: any) {
     try {
       const chatDate = chat.createdAt;
       const date = typeof chatDate === "string" ? new Date(chatDate) : chatDate;
-      
-      console.log("Processing chat:", chat.id, "Date:", date, "createdAt:", chatDate);
+
+      console.log(
+        "Processing chat:",
+        chat.id,
+        "Date:",
+        date,
+        "createdAt:",
+        chatDate,
+      );
 
       if (isToday(date)) {
         groups.today.push(chat);
@@ -57,7 +70,7 @@ const DATE_GROUPS = [
   { key: "older", label: "Older" },
 ];
 
-function ChatItem({ chat, isActive, onDelete }) {
+function ChatItem({ chat, isActive, onDelete }: ChatItemProp) {
   return (
     <Link
       href={`/chat/${chat.id}`}
@@ -92,7 +105,7 @@ function ChatItem({ chat, isActive, onDelete }) {
   );
 }
 
-function ChatGroup({ label, chats, activeChatId, onDelete }) {
+function ChatGroup({ label, chats, activeChatId, onDelete }: ChatGroupProp) {
   if (chats.length === 0) return null;
 
   return (
@@ -100,7 +113,7 @@ function ChatGroup({ label, chats, activeChatId, onDelete }) {
       <div className="mb-2 px-2 text-xs font-semibold text-muted-foreground">
         {label}
       </div>
-      {chats.map((chat) => (
+      {chats.map((chat: any) => (
         <ChatItem
           key={chat.id}
           chat={chat}
@@ -112,10 +125,10 @@ function ChatGroup({ label, chats, activeChatId, onDelete }) {
   );
 }
 
-const ChatSidebar = ({ user }) => {
-   const { data: chats = [], isPending } = useGetChats();
+const ChatSidebar = ({ user }: any) => {
+  const { data: chats = [], isPending } = useGetChats();
 
-   console.log("Fetched chats:", chats);
+  console.log("Fetched chats:", chats);
   const pathname = usePathname();
   const activeChatId = pathname?.startsWith("/chat/")
     ? pathname.split("/")[2]
@@ -123,7 +136,6 @@ const ChatSidebar = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
- 
 
   const filteredChats = useMemo(() => {
     if (!searchQuery) return chats;
@@ -202,8 +214,8 @@ const ChatSidebar = ({ user }) => {
             <ChatGroup
               key={group.key}
               label={group.label}
-              chats={groupedChats[group.key]}
-              activeChatId={activeChatId}
+              chats={groupedChats[group.key as keyof typeof groupedChats]}
+              activeChatId={activeChatId ?? undefined}
               onDelete={handleDelete}
             />
           ))

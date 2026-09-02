@@ -9,7 +9,7 @@ const DeleteChatModel = ({
     isModalOpen,
     setIsModalOpen,
     chatId,
-}) => {
+}: DeleteChatModelProp) => {
 
     const {mutateAsync ,isPending} = useDeleteChat(chatId);
 
@@ -20,7 +20,7 @@ const DeleteChatModel = ({
                 setIsModalOpen(false);
         } catch (error) {
               toast.error("Failed to delete Chat");
-      console.error("Failed to delete Chat:", err);
+      console.error("Failed to delete Chat:", error as Error);
         }
     }
 
@@ -33,7 +33,7 @@ const DeleteChatModel = ({
       onSubmit={handleDelete}
       submitText={isPending ? "Deleting..." : "Delete"}
       submitVariant="destructive"
-      
+
     >
 <p className="text-sm text-zinc-500">
         Once deleted, all requests and data in this Chat will be permanently removed.

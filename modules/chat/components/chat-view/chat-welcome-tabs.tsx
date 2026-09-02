@@ -49,7 +49,7 @@ const CHAT_TAB_MESSAGE = [
 ];
 
 
-const ChatWelcomeTabs = ({userName="John Doe" , onMessageSelect} ) => {
+const ChatWelcomeTabs = ({userName="John Doe" , onMessageSelect}: any ) => {
     const [activeTab , setActiveTab] = useState(0)
   return (
    <div className="flex flex-col items-center justify-center px-4">

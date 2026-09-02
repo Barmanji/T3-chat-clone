@@ -38,7 +38,6 @@ import {
 } from "@/components/ai-elements/reasoning";
 import { toast } from "sonner";
 
-
 type DBMessage = {
   id: string;
   content: string;
@@ -52,8 +51,7 @@ type MessagePartShape = {
   [key: string]: unknown;
 };
 
-
-function parseMessageToUI(msg) {
+function parseMessageToUI(msg: any) {
   const basePart = { type: "text", text: msg.content };
 
   try {
@@ -74,8 +72,14 @@ function parseMessageToUI(msg) {
   }
 }
 
-function MessagePart({ part, messageId, partIndex, role , isStreaming }:{
-   part: MessagePartShape;
+function MessagePart({
+  part,
+  messageId,
+  partIndex,
+  role,
+  isStreaming,
+}: {
+  part: MessagePartShape;
   messageId: string;
   partIndex: number;
   role: UIMessage["role"];
@@ -119,58 +123,61 @@ function MessagePart({ part, messageId, partIndex, role , isStreaming }:{
   return null;
 }
 
-export const MessageViewWithForm = ({ chatId }: {chatId:string}) => {
- const {data:chatData , isPending} = useGetChatById(chatId);
+export const MessageViewWithForm = ({ chatId }: { chatId: string }) => {
+  const { data: chatData, isPending } = useGetChatById(chatId);
 
- console.log(chatData)
+  console.log(chatData);
 
- if(isPending){
+  if (isPending) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!chatData?.success || !chatData?.data) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        Chat Not Found
+      </div>
+    );
+  }
+
+  const rawMessages = chatData.data.messages ?? [];
+  const initialMessages: UIMessage[] = rawMessages
+    .filter((m) => m?.id && m?.content?.trim())
+    .map(parseMessageToUI);
+
   return (
-    <div className="flex items-center justify-center h-full">
-      <Spinner/>
-    </div>
-  )
- }
-
- if(!chatData?.success || !chatData?.data){
-  return (
-    <div className="flex items-center justify-center h-full text-muted-foreground">
-      Chat Not Found
-    </div>
-  )
- }
-
- const rawMessages = (chatData.data.messages ?? [])
- const initialMessages:UIMessage[] = rawMessages.filter((m)=>m?.id && m?.content?.trim())
- .map(parseMessageToUI);
-
- return (
-  <ChatView
-  chatId={chatId}
-  initialMessages={initialMessages}
-  initialModel={chatData.data.model}
-  />
- )
+    <ChatView
+      chatId={chatId}
+      initialMessages={initialMessages}
+      initialModel={chatData.data.model}
+    />
+  );
 };
 
 const ChatView = ({
   chatId,
   initialMessages,
   initialModel,
-}:{
-   chatId: string;
+}: {
+  chatId: string;
   initialMessages: UIMessage[];
   initialModel: string | null;
-})=>{
+}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const shouldAutoTrigger = searchParams.get("autoTrigger") === "true";
   const hasAutoTriggered = useRef(false);
 
-  const [selectedModel , setSelectedModel] = useState<string | null>(initialModel);
-   const { data: modelsData, isPending: isModelLoading } = useAIModels();
+  const [selectedModel, setSelectedModel] = useState<string | null>(
+    initialModel,
+  );
+  const { data: modelsData, isPending: isModelLoading } = useAIModels();
 
-   const transport = useMemo(
+  const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
@@ -188,11 +195,9 @@ const ChatView = ({
     },
   });
 
-  
   const isBuzy = status === "submitted" || status === "streaming";
 
-
-    useEffect(() => {
+  useEffect(() => {
     if (!shouldAutoTrigger) return;
     if (hasAutoTriggered.current) return;
     if (!selectedModel) return;
@@ -228,36 +233,34 @@ const ChatView = ({
     searchParams,
   ]);
 
-
-  const handleSubmit = async(message:PromptInputMessage)=>{
+  const handleSubmit = async (message: PromptInputMessage) => {
     const text = message.text?.trim();
-    if(!text) return;
-    if(!selectedModel){
-      toast.error("Please select a model first")
+    if (!text) return;
+    if (!selectedModel) {
+      toast.error("Please select a model first");
     }
 
-    if(isBuzy) return;
+    if (isBuzy) return;
 
     try {
       await sendMessage(
-        {text},
+        { text },
         {
-          body:{
+          body: {
             chatId,
-            model:selectedModel,
-            skipUserMessage:false
-          }
-        }
-      )
+            model: selectedModel,
+            skipUserMessage: false,
+          },
+        },
+      );
     } catch (error) {
-        console.error("Send message failed:", err);
+      console.error("Send message failed:", error);
       toast.error("Failed to send message");
     }
-  }
-
+  };
 
   return (
-     <div className="max-w-4xl mx-auto p-6 relative size-full h-[calc(100vh-4rem)]">
+    <div className="max-w-4xl mx-auto p-6 relative size-full h-[calc(100vh-4rem)]">
       <div className="flex flex-col h-full">
         <Conversation className="h-full">
           <ConversationContent>
@@ -331,5 +334,6 @@ const ChatView = ({
         </PromptInput>
       </div>
     </div>
-  )
-}
+  );
+};
+

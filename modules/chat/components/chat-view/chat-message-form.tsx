@@ -10,7 +10,7 @@ import { useAIModels } from "../../hooks/use-ai-models";
 import { ModelSelector } from "./model-selector";
 import { useCreateChat } from "../../hooks/use-chats";
 
-export default function ChatMessageForm({ initialMessage, onMessageChange }) {
+export default function ChatMessageForm({ initialMessage, onMessageChange }: ChatMessageFormProp) {
   const { data: models, isPending } = useAIModels();
   const [message, setMessage] = useState("");
   const [selectedModel, setSelectedModel] = useState(models?.models[0].id);
@@ -24,7 +24,7 @@ export default function ChatMessageForm({ initialMessage, onMessageChange }) {
     }
   },[initialMessage, onMessageChange])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     try {
       e.preventDefault();
       await mutateAsync({ content: message, model: selectedModel });
