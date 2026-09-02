@@ -16,9 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
-
-
-
 export default function UserButton({
   user,
   onLogout,
@@ -31,7 +28,7 @@ export default function UserButton({
   size = "md",
   showEmail = true,
   showMemberSince = true,
-}) {
+}: UserButtonProp) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -46,7 +43,7 @@ export default function UserButton({
   }
 
   const handleLogout = async () => {
-  
+
       setIsLoading(true);
       try {
         await onSignOut();
@@ -55,15 +52,15 @@ export default function UserButton({
       } finally {
         setIsLoading(false);
       }
-    
+
   };
 
   // Get user initials for avatar fallback
-  const getUserInitials = (name, email) => {
+  const getUserInitials = (name: any, email: any) => {
     if (name) {
       return name
         .split(" ")
-        .map((n) => n[0])
+        .map((n: any) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2);
@@ -75,7 +72,7 @@ export default function UserButton({
   };
 
   // Format member since date
-  const formatMemberSince = (date) => {
+  const formatMemberSince = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
       year: "numeric",
@@ -83,7 +80,7 @@ export default function UserButton({
   };
 
   // Avatar sizes
-  const avatarSizes = {
+  const avatarSizes: any = {
     sm: "h-8 w-8",
     md: "h-10 w-10",
     lg: "h-12 w-12",
@@ -121,7 +118,7 @@ export default function UserButton({
           )}
         </Button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent className="w-64" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-2">
@@ -158,32 +155,32 @@ export default function UserButton({
             )}
           </div>
         </DropdownMenuLabel>
-        
+
         <DropdownMenuSeparator />
-        
+
         {onProfile && (
           <DropdownMenuItem onClick={onProfile} className="cursor-pointer">
             <UserIcon className="mr-2 h-4 w-4" />
             Profile
           </DropdownMenuItem>
         )}
-        
+
         {onBilling && (
           <DropdownMenuItem onClick={onBilling} className="cursor-pointer">
             <CreditCard className="mr-2 h-4 w-4" />
             Billing
           </DropdownMenuItem>
         )}
-        
+
         {onSettings && (
           <DropdownMenuItem onClick={onSettings} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </DropdownMenuItem>
         )}
-        
+
         <DropdownMenuSeparator />
-        
+
         <DropdownMenuItem
           onClick={handleLogout}
           disabled={isLoading}
