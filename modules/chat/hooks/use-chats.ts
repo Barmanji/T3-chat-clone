@@ -44,7 +44,7 @@ export const useCreateChat = () => {
   });
 };
 
-export const useDeleteChat = (chatId:string) => {
+export const useDeleteChat = (chatId:any) => {
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -52,7 +52,7 @@ export const useDeleteChat = (chatId:string) => {
     mutationFn: () => deleteChat(chatId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["chats" , chatId] });
-      
+
     },
     onError: () => {
       toast.error("Failed to delete chat");
