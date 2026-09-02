@@ -98,6 +98,8 @@ model Chat {
   @@map("chat")
 }
 
+
+// for knowing that either the msg coming from AI or human
 enum MessageRole {
   USER
   ASSISTANT
@@ -113,10 +115,10 @@ model Message {
   id          String      @id @default(cuid())
   messageRole MessageRole @default(USER)
   messageType MessageType @default(NORMAL)
-  content     String      @db.Text
+  content     String      @db.Text // if conetnt is too long
   model       String?
   chatId      String
-  chat        Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chat        Chat        @relation(fields: [chatId], references: [id], onDelete: Cascade) // refrential action
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
