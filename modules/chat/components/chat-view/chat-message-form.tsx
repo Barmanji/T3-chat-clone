@@ -1,32 +1,47 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Send, Paperclip, Mic, Globe } from "lucide-react";
+import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { useAIModels } from "../../hooks/use-ai-models";
 import { ModelSelector } from "./model-selector";
 import { useCreateChat } from "../../hooks/use-chats";
 
-export default function ChatMessageForm({ initialMessage, onMessageChange }: ChatMessageFormProp) {
+export default function ChatMessageForm({
+  initialMessage,
+  onMessageChange,
+}: ChatMessageFormProp) {
   const { data: models, isPending } = useAIModels();
   const [message, setMessage] = useState("");
-  const [selectedModel, setSelectedModel] = useState(models?.models[0].id);
+  const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
   const { mutateAsync, isPending: isChatPending } = useCreateChat();
 
-  useEffect(()=>{
-      if (initialMessage) {
+  useEffect(() => {
+    if (models?.models?.[0]?.id && !selectedModel) {
+      setSelectedModel(models.models[0].id);
+    }
+  }, [models, selectedModel]);
+
+  useEffect(() => {
+    if (initialMessage) {
       setMessage(initialMessage);
       onMessageChange?.("");
     }
-  },[initialMessage, onMessageChange])
+  }, [initialMessage, onMessageChange]);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+
+    if (!selectedModel) {
+      toast.error("Please select a model first");
+      return;
+    }
+
     try {
-      e.preventDefault();
       await mutateAsync({ content: message, model: selectedModel });
       toast.success("Message sent successfully");
     } catch (error) {
@@ -40,14 +55,12 @@ export default function ChatMessageForm({ initialMessage, onMessageChange }: Cha
   return (
     <div className="w-full max-w-3xl mx-auto px-4 pb-6">
       <form onSubmit={handleSubmit} className="relative">
-        {/* Main Input Container */}
-        <div className="relative rounded-2xl border border-border shadow-sm   transition-all">
-          {/* Textarea */}
+        <div className="relative rounded-2xl border border-border shadow-sm transition-all">
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message here..."
-            className="min-h-[60px] max-h-[200px] resize-none border-0 bg-transparent px-4 py-3 text-base focus-visible:ring-0 focus-visible:ring-offset-0 "
+            className="min-h-[60px] max-h-[200px] resize-none border-0 bg-transparent px-4 py-3 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
@@ -56,17 +69,13 @@ export default function ChatMessageForm({ initialMessage, onMessageChange }: Cha
             }}
           />
 
-          {/* Toolbar */}
-          <div className="flex items-center justify-between gap-2 px-3 py-2 border-t ">
-            {/* Left side tools */}
+          <div className="flex items-center justify-between gap-2 px-3 py-2 border-t">
             <div className="flex items-center gap-1">
               {isPending ? (
-                <>
-                  <Spinner />
-                </>
+                <Spinner />
               ) : (
                 <ModelSelector
-                  models={models?.models}
+                  models={models?.models ?? []}
                   selectedModelId={selectedModel}
                   onModelSelect={setSelectedModel}
                   className="ml-1"
@@ -74,17 +83,13 @@ export default function ChatMessageForm({ initialMessage, onMessageChange }: Cha
               )}
             </div>
 
-            {/* Submit Button */}
             <Button
               type="submit"
-              disabled={!message.trim()}
+              disabled={!message.trim() || !selectedModel}
               size="sm"
-              variant={message.trim() ? "default" : "ghost"}
-              className="h-8 w-8 p-0 rounded-full "
+              variant={message.trim() && selectedModel ? "default" : "ghost"}
+              className="h-8 w-8 p-0 rounded-full"
               aria-label="Send message"
-              title={
-                message.trim() ? "Send message" : "Enter a message to enable"
-              }
             >
               {isChatPending ? (
                 <Spinner />

@@ -20,9 +20,8 @@ import {
 import {
   Conversation,
   ConversationContent,
-  ConversationDownload,
-  ConversationEmptyState,
   ConversationScrollButton,
+  ConversationEmptyState,
 } from "@/components/ai-elements/conversation";
 
 import { ModelSelector } from "../chat-view/model-selector";
@@ -51,21 +50,22 @@ type MessagePartShape = {
   [key: string]: unknown;
 };
 
-function parseMessageToUI(msg: any) {
+function parseMessageToUI(msg: DBMessage) {
   const basePart = { type: "text", text: msg.content };
+  const role = msg.messageRole.toLowerCase() as "user" | "assistant";
 
   try {
     const parts = JSON.parse(msg.content);
     return {
       id: msg.id,
-      role: msg.messageRole.toLowerCase(),
+      role,
       parts: Array.isArray(parts) ? parts : [basePart],
       createdAt: msg.createdAt,
     };
   } catch {
     return {
       id: msg.id,
-      role: msg.messageRole.toLowerCase(),
+      role,
       parts: [basePart],
       createdAt: msg.createdAt,
     };
@@ -126,8 +126,6 @@ function MessagePart({
 export const MessageViewWithForm = ({ chatId }: { chatId: string }) => {
   const { data: chatData, isPending } = useGetChatById(chatId);
 
-  console.log(chatData);
-
   if (isPending) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -176,6 +174,12 @@ const ChatView = ({
     initialModel,
   );
   const { data: modelsData, isPending: isModelLoading } = useAIModels();
+
+  useEffect(() => {
+    if (modelsData?.models?.[0]?.id && !selectedModel) {
+      setSelectedModel(modelsData.models[0].id);
+    }
+  }, [modelsData, selectedModel]);
 
   const transport = useMemo(
     () =>
@@ -236,8 +240,10 @@ const ChatView = ({
   const handleSubmit = async (message: PromptInputMessage) => {
     const text = message.text?.trim();
     if (!text) return;
+
     if (!selectedModel) {
       toast.error("Please select a model first");
+      return;
     }
 
     if (isBuzy) return;
@@ -303,7 +309,7 @@ const ChatView = ({
               </div>
             )}
           </ConversationContent>
-          <ConversationScrollButton />
+          <ConversationScrollButton className="cursor-pointer" />
         </Conversation>
 
         <PromptInput onSubmit={handleSubmit} className="mt-4">
@@ -328,7 +334,7 @@ const ChatView = ({
                   />
                 )}
               </div>
-              <PromptInputSubmit status={status} onStop={stop} />
+              <PromptInputSubmit status={status} onStop={stop} className="cursor-pointer" />
             </PromptInputTools>
           </PromptInputFooter>
         </PromptInput>
@@ -336,4 +342,3 @@ const ChatView = ({
     </div>
   );
 };
-

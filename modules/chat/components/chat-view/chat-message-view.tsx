@@ -3,10 +3,16 @@ import React, { useState } from 'react'
 import ChatWelcomeTabs from './chat-welcome-tabs';
 import ChatMessageForm from './chat-message-form';
 
-const ChatMessageView = ({user}: any) => {
-    const [selectedMessage , setSelectedMessage] = useState("");
+interface ChatMessageViewProps {
+  user?: {
+    name: string | null;
+  } | null;
+}
 
-      const handleMessageSelect = (message: any) => {
+const ChatMessageView = ({ user }: ChatMessageViewProps) => {
+  const [selectedMessage, setSelectedMessage] = useState("");
+
+  const handleMessageSelect = (message: string) => {
     setSelectedMessage(message);
   };
 
@@ -14,18 +20,17 @@ const ChatMessageView = ({user}: any) => {
     setSelectedMessage("");
   };
 
-
   return (
     <div className='flex flex-col items-center justify-center h-screen space-y-10'>
-        <ChatWelcomeTabs
-        userName={user?.name}
+      <ChatWelcomeTabs
+        userName={user?.name ?? "there"}
         onMessageSelect={handleMessageSelect}
-        />
+      />
 
-        <ChatMessageForm
-           initialMessage={selectedMessage}
-          onMessageChange={handleMessageChange}
-        />
+      <ChatMessageForm
+        initialMessage={selectedMessage}
+        onMessageChange={handleMessageChange}
+      />
     </div>
   )
 }

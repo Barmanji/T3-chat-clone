@@ -4,8 +4,13 @@ import { Sparkles, Newspaper, Code, GraduationCap} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
+interface TabMessage {
+  tabName: string;
+  icon: React.ReactNode;
+  messages: string[];
+}
 
-const CHAT_TAB_MESSAGE = [
+const CHAT_TAB_MESSAGE: TabMessage[] = [
   {
     tabName: "Create",
     icon: <Sparkles className="h-4 w-4" />,
@@ -48,14 +53,23 @@ const CHAT_TAB_MESSAGE = [
   },
 ];
 
+interface ChatWelcomeTabsProps {
+  userName?: string;
+  onMessageSelect: (message: string) => void;
+}
 
-const ChatWelcomeTabs = ({userName="John Doe" , onMessageSelect}: any ) => {
-    const [activeTab , setActiveTab] = useState(0)
+const ChatWelcomeTabs = ({ userName = "there", onMessageSelect }: ChatWelcomeTabsProps) => {
+  const [activeTab, setActiveTab] = useState(0);
+
+  const displayName = userName.includes(" ")
+    ? userName.slice(0, userName.indexOf(" "))
+    : userName;
+
   return (
-   <div className="flex flex-col items-center justify-center px-4">
+    <div className="flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-3xl space-y-8">
         <h1 className="text-4xl font-semibold">
-          How can I help you, {userName.slice(0, userName.indexOf(" ")) || userName}?
+          How can I help you, {displayName}?
         </h1>
 
         <div className="flex flex-wrap gap-2 w-full">
@@ -64,7 +78,7 @@ const ChatWelcomeTabs = ({userName="John Doe" , onMessageSelect}: any ) => {
               key={tab.tabName}
               variant={activeTab === index ? "default" : "secondary"}
               onClick={() => setActiveTab(index)}
-              className="w-[110px] justify-start"
+              className="w-[110px] justify-start cursor-pointer"
             >
               {tab.icon}
               <span className="ml-2">{tab.tabName}</span>
@@ -77,7 +91,7 @@ const ChatWelcomeTabs = ({userName="John Doe" , onMessageSelect}: any ) => {
             <div key={index}>
               <button
                 onClick={() => onMessageSelect(message)}
-                className="w-full text-left text-sm text-muted-foreground hover:text-primary transition-colors duration-300 ease-in-out py-2"
+                className="w-full text-left text-sm text-muted-foreground hover:text-primary transition-colors duration-300 ease-in-out py-2 cursor-pointer"
               >
                 {message}
               </button>

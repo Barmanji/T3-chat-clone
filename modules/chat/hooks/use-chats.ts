@@ -18,7 +18,7 @@ export const useGetChats = () => {
   });
 };
 
-export const useGetChatById = (chatId:string) => {
+export const useGetChatById = (chatId: string) => {
   return useQuery({
     queryKey: ["chats", chatId],
     queryFn: () => getChatById(chatId),
@@ -31,11 +31,11 @@ export const useCreateChat = () => {
 
   return useMutation({
     mutationFn: createChatWithMessage,
-    onSuccess: (res: any) => {
-        if(res.success && res.data){
-            queryClient.invalidateQueries({queryKey:["chats"]});
-            router.push(`/chat/${res.data.id}?autoTrigger=true`)
-        }
+    onSuccess: (res) => {
+      if (res.success && res.data) {
+        queryClient.invalidateQueries({ queryKey: ["chats"] });
+        router.push(`/chat/${res.data.id}?autoTrigger=true`);
+      }
     },
     onError: (error: Error) => {
       console.error("Create chat error:", error);
@@ -44,18 +44,31 @@ export const useCreateChat = () => {
   });
 };
 
-export const useDeleteChat = (chatId:any) => {
+export const useDeleteChat = (chatId: string) => {
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   return useMutation({
     mutationFn: () => deleteChat(chatId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["chats" , chatId] });
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["chats"] });
 
+      const previousChats = queryClient.getQueryData(["chats"]);
+
+      queryClient.setQueryData(["chats"], (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return old.filter((chat: { id: string }) => chat.id !== chatId);
+      });
+
+      return { previousChats };
     },
-    onError: () => {
+    onError: (_err, _variables, context) => {
+      if (context?.previousChats) {
+        queryClient.setQueryData(["chats"], context.previousChats);
+      }
       toast.error("Failed to delete chat");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
   });
 };

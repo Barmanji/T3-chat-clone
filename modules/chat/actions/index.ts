@@ -2,7 +2,6 @@
 import { prisma } from "@/lib/db";
 import { MessageRole, MessageType } from "@/lib/generated/prisma/enums";
 import { currentUser } from "@/modules/authentication/actions";
-import { success } from "better-auth";
 import { revalidatePath } from "next/cache";
 
 interface IcreateChatWithMessage {
