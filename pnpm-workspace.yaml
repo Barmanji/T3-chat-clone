@@ -3,3 +3,6 @@ allowBuilds:
   prisma: true
   sharp: true
   unrs-resolver: true
+
+overrides:
+  shiki: "^4.4.3"
