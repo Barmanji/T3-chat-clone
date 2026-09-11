@@ -47,6 +47,8 @@ docker run -p 3000:3000 --env-file .env t3-chat
 
 ## How It Works
 
+### Chat Flow
+
 The app uses OpenRouter as a gateway to access free AI models. When you send a message, it streams the response via the Vercel AI SDK and saves both your message and the AI response to Postgres on completion.
 
 ```mermaid
@@ -63,33 +65,120 @@ sequenceDiagram
     N->>P: save user + assistant messages (onFinish)
 ```
 
-Authentication is handled by `better-auth` with Prisma as the adapter. Sessions are stored in the database. OAuth providers (GitHub, Google) are configured via environment variables and handled server-side.
+### Authentication
+
+Auth is handled by `better-auth` with Prisma as the adapter. Sessions are stored in the database. OAuth providers (GitHub, Google) are configured via environment variables and handled server-side.
+
+```mermaid
+flowchart TD
+    A[User visits app] --> B{Has session?}
+    B -->|Yes| C[Load user from DB]
+    C --> D[Render chat interface]
+    B -->|No| E[Redirect to /sign-in]
+    E --> F[User clicks GitHub/Google]
+    F --> G[OAuth provider callback]
+    G --> H[Create/update user in DB]
+    H --> I[Create session]
+    I --> D
+```
+
+### Route Protection
+
+Every page that requires auth calls `currentUser()` server-side. If no session exists, the user sees `null` and the UI degrades gracefully. The sign-in page uses `requireUnAuth()` — if you're already logged in, it redirects you to `/`.
+
+```mermaid
+flowchart LR
+    subgraph Protected ["/ (chat), /chat/:id"]
+        A[Server Component] --> B[currentUser]
+        B -->|session exists| C[Render with user]
+        B -->|no session| D[Render with null]
+        D --> E[UI shows sign-in prompt]
+    end
+
+    subgraph Auth ["/sign-in"]
+        F[Server Component] --> G[requireUnAuth]
+        G -->|session exists| H[Redirect to /]
+        G -->|no session| I[Render sign-in page]
+    end
+```
 
 ## Project Structure
 
 ```
-app/
-  (auth)/sign-in/     # Login page
-  (root)/             # Main chat layout with resizable sidebar
-  api/chat/           # Streaming chat endpoint
-  api/ai/get-models/  # Fetches free models from OpenRouter
-  legal/              # Terms, privacy, AI disclaimer
-modules/
-  authentication/     # User button, auth components
-  chat/
-    actions/          # Chat CRUD (create, delete, rename)
-    components/       # Sidebar, message views, model selector
-    hooks/            # useChats, useAiModels queries
-  types/              # Shared TypeScript interfaces
-components/
-  ui/                 # shadcn components (modal, spinner, etc.)
-  ai-elements/        # Message rendering (markdown, code blocks)
-lib/
-  auth.ts             # better-auth config
-  db.ts               # Prisma client
-  prompt.ts           # System prompt for AI
-prisma/
-  schema.prisma       # User, Session, Chat, Message models
+t3-chat/
+├── app/
+│   ├── (auth)/
+│   │   └── sign-in/
+│   │       └── page.tsx                 # Login page
+│   ├── (root)/
+│   │   ├── layout.tsx                   # Server layout, passes user
+│   │   ├── layout-client.tsx            # Client layout with resizable sidebar
+│   │   └── page.tsx                     # Main chat view
+│   ├── api/
+│   │   ├── ai/
+│   │   │   └── get-models/
+│   │   │       └── route.ts             # Fetches free models from OpenRouter
+│   │   ├── auth/
+│   │   │   └── [...all]/
+│   │   │       └── route.ts             # better-auth catch-all handler
+│   │   └── chat/
+│   │       └── route.ts                 # Streaming chat endpoint
+│   ├── legal/
+│   │   └── page.tsx                     # Terms, privacy, AI disclaimer
+│   ├── globals.css                      # Tailwind + code block overrides
+│   └── layout.tsx                       # Root layout, fonts, metadata
+├── components/
+│   ├── ai-elements/
+│   │   ├── message.tsx                  # Markdown/code rendering
+│   │   └── reasoning.tsx                # AI reasoning display
+│   ├── ui/
+│   │   ├── modal.tsx                    # Reusable modal
+│   │   ├── spinner.tsx                  # Loading spinner
+│   │   └── resizable.tsx                # Panel components
+│   ├── header.tsx                       # Top bar with theme toggle
+│   └── delete-chat-model.tsx            # Delete confirmation dialog
+├── lib/
+│   ├── auth.ts                          # better-auth config
+│   ├── auth-client.ts                   # Client-side auth helpers
+│   ├── db.ts                            # Prisma client
+│   └── prompt.ts                        # System prompt for AI
+├── modules/
+│   ├── authentication/
+│   │   ├── actions/
+│   │   │   └── index.ts                 # currentUser, requireAuth, requireUnAuth
+│   │   └── components/
+│   │       └── user-button.tsx          # User avatar + dropdown
+│   ├── chat/
+│   │   ├── actions/
+│   │   │   └── index.ts                 # Chat CRUD (create, delete, rename)
+│   │   ├── components/
+│   │   │   ├── chat-sidebar.tsx          # Resapsible sidebar with chat list
+│   │   │   ├── chat-view/
+│   │   │   │   ├── chat-message-form.tsx # Message input with model selector
+│   │   │   │   ├── chat-message-view.tsx # Main chat area
+│   │   │   │   ├── chat-welcome-tabs.tsx # Welcome screen tabs
+│   │   │   │   └── model-selector.tsx    # Model dropdown
+│   │   │   └── messages/
+│   │   │       └── message-view-form.tsx # Chat view wrapper
+│   │   ├── hooks/
+│   │   │   ├── use-chats.ts             # Chat list query + mutations
+│   │   │   └── use-ai-models.ts         # Free models query
+│   │   └── constant/
+│   │       └── index.ts                 # Chat constants
+│   └── types/
+│       ├── AIModel.ts                   # AI model types
+│       ├── ChatItemProp.ts              # Chat item interface
+│       ├── ChatGroupProp.ts             # Chat group interface
+│       ├── ModalProp.ts                 # Modal props interface
+│       └── UserButtonProp.ts            # User button interface
+├── prisma/
+│   └── schema.prisma                    # User, Session, Chat, Message models
+├── public/
+│   ├── favicon.svg                      # T3 favicon
+│   └── logo.svg                         # T3 Chat logo
+├── Dockerfile                           # Multi-stage Docker build
+├── .env.example                         # Environment variable template
+└── package.json
 ```
 
 ## Key Features
@@ -105,3 +194,7 @@ prisma/
 ## Stack
 
 Next.js 16, React 19, Prisma, PostgreSQL, better-auth, OpenRouter AI SDK, TanStack Query, shadcn/ui, Tailwind CSS 4, streamdown (markdown rendering).
+
+## License
+
+MIT
