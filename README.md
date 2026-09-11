@@ -7,7 +7,7 @@ A multi-model AI chat interface that connects to OpenRouter's free models. Suppo
 1. Clone and install:
 
 ```bash
-git clone <repo-url> t3-chat-clone
+git clone git@github.com:Barmanji/T3-chat-clone.git
 cd t3-chat-clone
 pnpm install
 ```
@@ -41,8 +41,8 @@ Open `http://localhost:3000`.
 ### Docker
 
 ```bash
-docker build -t t3-chat .
-docker run -p 3000:3000 --env-file .env t3-chat
+docker build -t t3-chat-clone .
+docker run -p 3000:3000 --env-file .env t3-chat-clone
 ```
 
 ## How It Works
