@@ -1,4 +1,4 @@
-# T3 Chat
+# T3 Chat Clone
 
 A multi-model AI chat interface that connects to OpenRouter's free models. Supports GitHub and Google OAuth, persistent chat history, markdown rendering with syntax highlighting, and a resizable sidebar.
 
@@ -7,8 +7,8 @@ A multi-model AI chat interface that connects to OpenRouter's free models. Suppo
 1. Clone and install:
 
 ```bash
-git clone <repo-url>
-cd t3-chat
+git clone <repo-url> t3-chat-clone
+cd t3-chat-clone
 pnpm install
 ```
 
@@ -175,7 +175,7 @@ t3-chat/
 │   └── schema.prisma                    # User, Session, Chat, Message models
 ├── public/
 │   ├── favicon.svg                      # T3 favicon
-│   └── logo.svg                         # T3 Chat logo
+│   └── logo.svg                         # T3 Chat Clone logo
 ├── Dockerfile                           # Multi-stage Docker build
 ├── .env.example                         # Environment variable template
 └── package.json
