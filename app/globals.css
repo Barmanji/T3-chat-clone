@@ -128,3 +128,9 @@
     @apply font-mono;
   }
 }
+
+/* Ensure streamdown code block copy buttons are clickable */
+[data-streamdown="code-block-actions"] button {
+  pointer-events: auto !important;
+  cursor: pointer;
+}
