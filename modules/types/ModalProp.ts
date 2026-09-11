@@ -8,7 +8,7 @@ interface ModalProp {
   submitText?: string;
   cancelText?: string;
   showFooter?: boolean;
-  submitVariant?: string;
+  submitVariant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | null;
   size?: string;
   className?: string;
 }

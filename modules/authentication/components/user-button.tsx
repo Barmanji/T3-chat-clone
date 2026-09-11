@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, LogOut, Settings, CreditCard, User as UserIcon } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -12,55 +12,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 
-export default function UserButton({
-  user,
-  onLogout,
-  onSettings,
-  onProfile,
-  onBilling,
-  showBadge = false,
-  badgeText = "Pro",
-  badgeVariant = "default",
-  size = "md",
-  showEmail = true,
-  showMemberSince = true,
-}: UserButtonProp) {
+export default function UserButton({ user }: { user: UserButtonProp["user"] }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-   const onSignOut = async()=>{
+  const onSignOut = async () => {
     await authClient.signOut({
-      fetchOptions:{
-        onSuccess:()=>{
-          router.push("/sign-in")
-        }
-      }
-    })
-  }
-
-  const handleLogout = async () => {
-
-      setIsLoading(true);
-      try {
-        await onSignOut();
-      } catch (error) {
-        console.error("Logout error:", error);
-      } finally {
-        setIsLoading(false);
-      }
-
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in");
+        },
+      },
+    });
   };
 
-  // Get user initials for avatar fallback
-  const getUserInitials = (name: any, email: any) => {
+  const handleLogout = async () => {
+    setIsLoading(true);
+    try {
+      await onSignOut();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getUserInitials = (name: string | null, email: string | null) => {
     if (name) {
       return name
         .split(" ")
-        .map((n: any) => n[0])
+        .map((n) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2);
@@ -71,7 +55,6 @@ export default function UserButton({
     return "U";
   };
 
-  // Format member since date
   const formatMemberSince = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       month: "long",
@@ -79,14 +62,6 @@ export default function UserButton({
     }).format(new Date(date));
   };
 
-  // Avatar sizes
-  const avatarSizes: any = {
-    sm: "h-8 w-8",
-    md: "h-10 w-10",
-    lg: "h-12 w-12",
-  };
-
-  // Don't render if no user
   if (!user) {
     return null;
   }
@@ -96,10 +71,10 @@ export default function UserButton({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={`relative ${avatarSizes[size]} rounded-full p-0 hover:bg-accent`}
+          className="relative h-10 w-10 rounded-full p-0 hover:bg-accent"
           disabled={isLoading}
         >
-          <Avatar className={avatarSizes[size]}>
+          <Avatar className="h-10 w-10">
             <AvatarImage
               src={user.image || ""}
               alt={user.name || "User avatar"}
@@ -108,14 +83,6 @@ export default function UserButton({
               {getUserInitials(user.name, user.email)}
             </AvatarFallback>
           </Avatar>
-          {showBadge && (
-            <Badge
-              variant={badgeVariant}
-              className="absolute -bottom-1 -right-1 h-5 px-1 text-xs"
-            >
-              {badgeText}
-            </Badge>
-          )}
         </Button>
       </DropdownMenuTrigger>
 
@@ -136,48 +103,18 @@ export default function UserButton({
                 <p className="text-sm font-medium leading-none">
                   {user.name || "User"}
                 </p>
-                {showEmail && user.email && (
+                {user.email && (
                   <p className="text-xs leading-none text-muted-foreground">
                     {user.email}
                   </p>
                 )}
-                {showBadge && (
-                  <Badge variant={badgeVariant} className="w-fit">
-                    {badgeText}
-                  </Badge>
-                )}
               </div>
             </div>
-            {showMemberSince && (
-              <p className="text-xs text-muted-foreground">
-                Member since {formatMemberSince(user.createdAt)}
-              </p>
-            )}
+            <p className="text-xs text-muted-foreground">
+              Member since {formatMemberSince(user.createdAt)}
+            </p>
           </div>
         </DropdownMenuLabel>
-
-        <DropdownMenuSeparator />
-
-        {onProfile && (
-          <DropdownMenuItem onClick={onProfile} className="cursor-pointer">
-            <UserIcon className="mr-2 h-4 w-4" />
-            Profile
-          </DropdownMenuItem>
-        )}
-
-        {onBilling && (
-          <DropdownMenuItem onClick={onBilling} className="cursor-pointer">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Billing
-          </DropdownMenuItem>
-        )}
-
-        {onSettings && (
-          <DropdownMenuItem onClick={onSettings} className="cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </DropdownMenuItem>
-        )}
 
         <DropdownMenuSeparator />
 
