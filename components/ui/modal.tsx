@@ -9,9 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button'
 
-
-
-const Modal= ({
+const Modal = ({
   children,
   title,
   description,
@@ -57,7 +55,7 @@ const Modal= ({
             </Button>
             {onSubmit && (
               <Button
-                className='bg-primary text-primary-foreground hover:bg-primary/90'
+                variant={submitVariant as "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"}
                 onClick={handleSubmit}
               >
                 {submitText}
