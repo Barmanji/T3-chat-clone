@@ -3,7 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import UserButton from "@/modules/authentication/components/user-button";
-import { PlusIcon, SearchIcon, EllipsisIcon, Trash } from "lucide-react";
+import {
+  PlusIcon,
+  SearchIcon,
+  EllipsisIcon,
+  Trash,
+  PanelLeftClose,
+  PanelLeftOpen,
+  LogOut,
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useMemo } from "react";
@@ -14,18 +22,37 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import DeleteChatModel from "@/components/delete-chat-model";
 import { useGetChats } from "../hooks/use-chats";
 import { Spinner } from "@/components/ui/spinner";
+import { authClient } from "@/lib/auth-client";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-// grouping chat as yesterday, today.
-function groupChatsByDate(chats: any) {
-  const groups = {
-    today: [] as any[],
-    yesterday: [] as any[],
-    lastWeek: [] as any[],
-    older: [] as any[],
+type ChatItem = {
+  id: string;
+  title: string;
+  createdAt: string | Date;
+  messages?: Array<{
+    id: string;
+    content: string;
+    messageRole: string;
+  }>;
+};
+
+type ChatGroups = {
+  today: ChatItem[];
+  yesterday: ChatItem[];
+  lastWeek: ChatItem[];
+  older: ChatItem[];
+};
+
+function groupChatsByDate(chats: ChatItem[]): ChatGroups {
+  const groups: ChatGroups = {
+    today: [],
+    yesterday: [],
+    lastWeek: [],
+    older: [],
   };
   const now = new Date();
 
@@ -35,15 +62,6 @@ function groupChatsByDate(chats: any) {
     try {
       const chatDate = chat.createdAt;
       const date = typeof chatDate === "string" ? new Date(chatDate) : chatDate;
-
-      console.log(
-        "Processing chat:",
-        chat.id,
-        "Date:",
-        date,
-        "createdAt:",
-        chatDate,
-      );
 
       if (isToday(date)) {
         groups.today.push(chat);
@@ -70,12 +88,20 @@ const DATE_GROUPS = [
   { key: "older", label: "Older" },
 ];
 
-function ChatItem({ chat, isActive, onDelete }: ChatItemProp) {
+function ChatItemComponent({
+  chat,
+  isActive,
+  onDelete,
+}: {
+  chat: ChatItem;
+  isActive?: boolean;
+  onDelete: (e: React.MouseEvent, chatId: string) => void;
+}) {
   return (
     <Link
       href={`/chat/${chat.id}`}
       className={cn(
-        "flex items-center justify-between rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors",
+        "flex items-center justify-between rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors cursor-pointer",
         isActive && "bg-sidebar-accent",
       )}
     >
@@ -85,7 +111,7 @@ function ChatItem({ chat, isActive, onDelete }: ChatItemProp) {
           <Button
             variant="ghost"
             size="icon"
-            className="h-6 w-6 shrink-0 hover:bg-sidebar-accent-foreground/10"
+            className="h-6 w-6 shrink-0 hover:bg-sidebar-accent-foreground/10 cursor-pointer"
             onClick={(e) => e.preventDefault()}
           >
             <EllipsisIcon className="h-4 w-4" />
@@ -105,7 +131,17 @@ function ChatItem({ chat, isActive, onDelete }: ChatItemProp) {
   );
 }
 
-function ChatGroup({ label, chats, activeChatId, onDelete }: ChatGroupProp) {
+function ChatGroupSection({
+  label,
+  chats,
+  activeChatId,
+  onDelete,
+}: {
+  label: string;
+  chats: ChatItem[];
+  activeChatId?: string;
+  onDelete: (e: React.MouseEvent, chatId: string) => void;
+}) {
   if (chats.length === 0) return null;
 
   return (
@@ -113,8 +149,8 @@ function ChatGroup({ label, chats, activeChatId, onDelete }: ChatGroupProp) {
       <div className="mb-2 px-2 text-xs font-semibold text-muted-foreground">
         {label}
       </div>
-      {chats.map((chat: any) => (
-        <ChatItem
+      {chats.map((chat) => (
+        <ChatItemComponent
           key={chat.id}
           chat={chat}
           isActive={chat.id === activeChatId}
@@ -125,10 +161,21 @@ function ChatGroup({ label, chats, activeChatId, onDelete }: ChatGroupProp) {
   );
 }
 
-const ChatSidebar = ({ user }: any) => {
-  const { data: chats = [], isPending } = useGetChats();
+interface ChatSidebarProps {
+  user: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+    createdAt: Date;
+  } | null;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+}
 
-  console.log("Fetched chats:", chats);
+const ChatSidebar = ({ user, isCollapsed, onToggleCollapse }: ChatSidebarProps) => {
+  const { data: chats = [], isPending } = useGetChats();
+  const router = useRouter();
   const pathname = usePathname();
   const activeChatId = pathname?.startsWith("/chat/")
     ? pathname.split("/")[2]
@@ -142,19 +189,16 @@ const ChatSidebar = ({ user }: any) => {
     const query = searchQuery.toLowerCase();
 
     return chats.filter(
-      (chat: any) =>
+      (chat: ChatItem) =>
         chat.title?.toLowerCase().includes(query) ||
-        chat.messages?.some((msg: any) =>
+        chat.messages?.some((msg) =>
           msg.content?.toLowerCase().includes(query),
         ),
     );
   }, [searchQuery, chats]);
 
   const groupedChats = useMemo(() => {
-    const result = groupChatsByDate(filteredChats);
-    console.log("Filtered chats:", filteredChats);
-    console.log("Grouped chats:", result);
-    return result;
+    return groupChatsByDate(filteredChats);
   }, [filteredChats]);
 
   const handleDelete = (e: React.MouseEvent, chatId: string) => {
@@ -164,18 +208,95 @@ const ChatSidebar = ({ user }: any) => {
     setIsModalOpen(true);
   };
 
+  const handleSignOut = async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/sign-in");
+        },
+      },
+    });
+  };
+
   if (isPending) {
-    return <Spinner className="m-auto" />;
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
   }
+
+  if (isCollapsed) {
+    return (
+      <div className="flex h-full flex-col items-center py-3 gap-3">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 cursor-pointer"
+              onClick={onToggleCollapse}
+            >
+              <PanelLeftOpen className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">Expand sidebar</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button asChild variant="ghost" size="icon" className="h-9 w-9 cursor-pointer">
+              <Link href="/">
+                <PlusIcon className="h-4 w-4" />
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">New Chat</TooltipContent>
+        </Tooltip>
+
+        <div className="flex-1" />
+
+        {user && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 text-muted-foreground hover:text-destructive cursor-pointer"
+                onClick={handleSignOut}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Sign out</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-full w-64 flex-col border-r border-border bg-sidebar">
+    <div className="flex h-full w-full flex-col bg-sidebar">
       {/* Header */}
-      <div className="flex items-center border-b border-sidebar-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-sidebar-border px-4 h-14 shrink-0">
         <Image src="/logo.svg" alt="Logo" width={100} height={100} />
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 cursor-pointer"
+              onClick={onToggleCollapse}
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Collapse sidebar</TooltipContent>
+        </Tooltip>
       </div>
 
       <div className="p-4">
-        <Button asChild className="w-full">
+        <Button asChild className="w-full cursor-pointer">
           <Link href="/">
             <PlusIcon className="mr-2 h-4 w-4" />
             New Chat
@@ -196,7 +317,7 @@ const ChatSidebar = ({ user }: any) => {
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               ×
             </button>
@@ -211,7 +332,7 @@ const ChatSidebar = ({ user }: any) => {
           </div>
         ) : (
           DATE_GROUPS.map((group) => (
-            <ChatGroup
+            <ChatGroupSection
               key={group.key}
               label={group.label}
               chats={groupedChats[group.key as keyof typeof groupedChats]}
@@ -223,12 +344,24 @@ const ChatSidebar = ({ user }: any) => {
       </div>
 
       {/* Footer */}
-
       <div className="p-4 flex items-center gap-3 border-t border-sidebar-border">
-        <UserButton user={user} />
+        {user && <UserButton user={user} />}
         <span className="flex-1 text-sm text-sidebar-foreground truncate">
-          {user.email}
+          {user?.email}
         </span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0 cursor-pointer"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Sign out</TooltipContent>
+        </Tooltip>
       </div>
 
       <DeleteChatModel
