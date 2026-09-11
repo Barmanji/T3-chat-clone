@@ -24,9 +24,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "T3 Chat Clone",
   description: "A T3 Chat clone - AI-powered chat interface with multiple models",
-  icons: {
-    icon: "/favicon.svg",
-  },
 };
 
 export default function RootLayout({
