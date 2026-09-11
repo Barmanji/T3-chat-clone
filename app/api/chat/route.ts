@@ -2,7 +2,6 @@ import {
   convertToModelMessages,
   streamText,
   createIdGenerator,
-  type UIMessage,
 } from "ai";
 import { CHAT_SYSTEM_PROMPT } from "@/lib/prompt";
 import { prisma } from "@/lib/db";
