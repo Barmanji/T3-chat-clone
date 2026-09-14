@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const allowedOrigin = process.env.NODE_ENV === "production"
-  ? "https://t3-chat-clone-five.vercel.app"
+  ? "https://t3-chat-clone-jj.vercel.app"
   : "http://localhost:3000";
 
 const nextConfig: NextConfig = {
