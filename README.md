@@ -1,4 +1,4 @@
-# T3 Chat Clone - [Link](https://t3-chat-clone-five.vercel.app)
+# T3 Chat Clone - [Link](https://t3-chat-clone-jj.vercel.app)
 
 A multi-model AI chat interface that connects to OpenRouter's free models. Supports GitHub and Google OAuth, persistent chat history, markdown rendering with syntax highlighting, and a resizable sidebar.
 
