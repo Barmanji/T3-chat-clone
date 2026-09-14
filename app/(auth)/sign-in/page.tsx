@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
-import { RiGoogleFill } from "@remixicon/react";
+import { RiGoogleFill, RiGithubFill, RiLinkedinBoxFill, RiGlobalLine, RiMailLine } from "@remixicon/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -18,8 +18,15 @@ const SignInPage = () => {
     });
   };
 
+  const socialLinks = [
+    { name: "GitHub", url: "https://github.com/barmanji", icon: <RiGithubFill size={25} /> },
+    { name: "LinkedIn", url: "https://www.linkedin.com/in/ajay-barman-0b37011a7/", icon: <RiLinkedinBoxFill size={25} /> },
+    { name: "Portfolio", url: "https://www.barmanji.com", icon: <RiGlobalLine size={25} /> },
+    { name: "Email", url: "mailto:barmanjiaj@gmail.com", icon: <RiMailLine size={25} /> },
+  ];
+
   return (
-    <section className="flex flex-col items-center justify-center min-h-screen bg-background px-4">
+    <section className="flex flex-col items-center justify-center min-h-screen bg-background px-4 relative pb-20">
       <div className="w-full max-w-md space-y-10">
         {/* Logo & Header */}
         <div className="flex flex-col items-center space-y-4">
@@ -80,7 +87,7 @@ const SignInPage = () => {
           </Button>
         </div>
 
-        {/* Footer */}
+        {/* Footer Legal Terms */}
         <p className="text-center text-xs text-muted-foreground">
           By signing in, you agree to our{" "}
           <Link href="/legal" className="underline hover:text-foreground cursor-pointer">
@@ -92,6 +99,22 @@ const SignInPage = () => {
           </Link>.
         </p>
       </div>
+
+      {/* Floating Bottom Social Component */}
+      <footer className="absolute bottom-6 left-0 right-0 flex justify-center items-center gap-6 text-muted-foreground">
+        {socialLinks.map((link) => (
+          <a
+            key={link.name}
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={link.name}
+            className="hover:text-foreground transition-colors duration-200 cursor-pointer"
+          >
+            {link.icon}
+          </a>
+        ))}
+      </footer>
     </section>
   );
 };
